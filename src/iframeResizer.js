@@ -35,6 +35,8 @@
 			bodyPadding               : null,
 			checkOrigin               : true,
 			inPageLinks               : false,
+			animatePageLocation       : false,
+			pageLocationAnimation     : {delay: 300, easing: 'easeInOut'},
 			enablePublicMethods       : true,
 			heightCalculationMethod   : 'bodyOffset',
 			id                        : 'iFrameResizer',
@@ -271,8 +273,8 @@
 			function debouncedTrigger(){
 				trigger(
 					'Send Page Info',
-					'pageInfo:' + getPageInfo(), 
-					iframe, 
+					'pageInfo:' + getPageInfo(),
+					iframe,
 					iframeId
 				);
 			}
@@ -304,7 +306,7 @@
 			function start(){
 				setListener('Add ', addEventListener);
 			}
-			
+
 			var id = iframeId; //Create locally scoped copy of iFrame ID
 
 			start();
@@ -551,8 +553,31 @@
 
 	function setPagePosition(iframeId){
 		if(null !== pagePosition){
-			window.scrollTo(pagePosition.x,pagePosition.y);
-			log(iframeId,'Set page position: '+pagePosition.x+','+pagePosition.y);
+			if (settings[iframeId].animatePageLocation === true) {
+				var deps = true;
+				if (typeof(jQuery) === 'undefined') {
+					log(iframeId,'Unable to animate - requires jQuery');
+					deps = false;
+				}
+				if (deps) {
+					var delay = settings[iframeId].pageLocationAnimation.delay;
+					var easing = settings[iframeId].pageLocationAnimation.easing;
+					log(iframeId,'Animating move to page position: '+pagePosition.x+','+pagePosition.y+', duration: '+delay+'ms, easing: '+easing);
+					$('html, body').animate({
+							scrollTop: pagePosition.y,
+							scrollLeft: pagePosition.x
+						},
+						delay,
+						easing
+					);
+				} else {
+					log(iframeId,'Fallback to non-animated set page position: '+pagePosition.x+','+pagePosition.y);
+					window.scrollTo(pagePosition.x,pagePosition.y);
+				}
+			} else {
+				log(iframeId,'Set page position: '+pagePosition.x+','+pagePosition.y);
+				window.scrollTo(pagePosition.x,pagePosition.y);
+			}
 			unsetPagePosition();
 		}
 	}
